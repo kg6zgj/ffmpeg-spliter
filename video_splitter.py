@@ -1,7 +1,7 @@
 import sys
 import re
 import shutil
-import configparser  # For configuration file handling
+import configparser
 import os
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QFileDialog, QPushButton, QVBoxLayout, QWidget, QListWidget,
                              QLabel, QCheckBox, QHBoxLayout, QInputDialog, QMessageBox, QListWidgetItem, QSlider,
@@ -316,6 +316,11 @@ class VideoSplitterApp(QMainWindow):
             QMessageBox.warning(self, "No Split Points", "Please add at least one split point.")
             return
 
+        # Pause the video if it is playing
+        if self.media_player.state() == QMediaPlayer.PlayingState:
+            self.media_player.pause()
+            self.play_pause_button.setText("Play")
+
         output_dir = QFileDialog.getExistingDirectory(self, "Select Output Directory")
         if not output_dir:
             return
@@ -342,10 +347,13 @@ class VideoSplitterApp(QMainWindow):
         self.total_duration = all_split_points[-1] - all_split_points[0]
         self.current_segment_duration = 0
 
+        # Get the original file name without extension
+        base_filename = os.path.splitext(os.path.basename(self.video_path))[0]
+
         for i in range(len(all_split_points) - 1):
             start_time = self.format_time(all_split_points[i] * 1000)
             end_time = self.format_time(all_split_points[i + 1] * 1000)
-            output_file = os.path.join(output_dir, f"split_{i + 1}.mp4")
+            output_file = os.path.join(output_dir, f"{base_filename}_split_{i + 1}.mp4")
 
             command = [
                 self.ffmpeg_path,
